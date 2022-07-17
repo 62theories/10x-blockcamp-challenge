@@ -17,34 +17,48 @@ export default function FeeRender(props: PropsType) {
   const signer = walletStore((state) => state.signer)
   const isSameWallet = async () => {
     const bank = Bank__factory.connect(BANK_CONTRACT_ADDRESS, signer)
+    console.log(
+      '  (await bank.bankAccountNameToAddress(to))',
+      await bank.bankAccountNameToAddress(to),
+    )
+
     return (
-      (await bank.bankAccountNameToAddress[from]) ===
-      (await bank.bankAccountNameToAddress[to])
+      (await bank.bankAccountNameToAddress(from)) ===
+      (await bank.bankAccountNameToAddress(to))
     )
   }
   useEffect(() => {
-    if (!(from && to && amount)) {
-      setCalculatedFee('')
-      return
-    }
-    if (!isSameWallet()) {
-      const feeInWei = ethers.utils.parseEther(String(amount)).div(100)
-      setCalculatedFee(ethers.utils.formatEther(feeInWei))
-    } else {
-      setCalculatedFee('')
-    }
+    ;(async () => {
+      if (!(from && to && amount)) {
+        setCalculatedFee('')
+        return
+      }
+      if (!(await isSameWallet())) {
+        const feeInWei = ethers.utils.parseEther(String(amount)).div(100)
+        setCalculatedFee(ethers.utils.formatEther(feeInWei))
+      } else {
+        setCalculatedFee('')
+      }
+    })()
   }, [from, to, amount])
+  console.log('calculatedFee', calculatedFee)
+
   return (
     <div>
       {calculatedFee ? (
         <div>
-          fee 1% = {calculatedFee} {coinSymbol} | Receive ={' '}
-          {ethers.utils.formatEther(
-            ethers.utils
-              .parseEther(String(amount))
-              .sub(ethers.utils.parseEther(String(amount)).div(100)),
-          )}{' '}
-          {coinSymbol}
+          <label
+            htmlFor=""
+            className="block text-gray-700 text-sm font-bold mb-2"
+          >
+            fee 1% = {calculatedFee} {coinSymbol} | Receive ={' '}
+            {ethers.utils.formatEther(
+              ethers.utils
+                .parseEther(String(amount))
+                .sub(ethers.utils.parseEther(String(amount)).div(100)),
+            )}{' '}
+            {coinSymbol}
+          </label>
         </div>
       ) : (
         <div></div>

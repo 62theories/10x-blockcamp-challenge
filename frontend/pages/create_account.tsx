@@ -6,6 +6,7 @@ import Swal from 'sweetalert2'
 import { useRouter } from 'next/router'
 import WalletAuth from '../layout/wallet_auth'
 import { walletStore } from '../store'
+import { getErrorMessage } from '../utils/get_error_message'
 
 export default function CreateAccount() {
   const signer = walletStore((state) => state.signer)
@@ -26,13 +27,10 @@ export default function CreateAccount() {
       })
       router.push('/')
     } catch (err) {
-      const errorMessage = err.message as string
-      let errorMessageAlert = 'create bank account error'
-      if (errorMessage.includes('bank account name must be unique')) {
-        errorMessageAlert = 'bank account name must be unique'
-      }
+      const errorMessage = getErrorMessage(err.message as string)
+      let errorMessageDisplay = errorMessage || 'create bank account error'
       Swal.fire({
-        title: errorMessageAlert,
+        title: errorMessageDisplay,
         icon: 'error',
         showConfirmButton: false,
         timer: 1500,
