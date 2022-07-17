@@ -6,6 +6,24 @@ import { BigNumber } from 'ethers'
 describe('Bank', function () {
   let bank: Bank
   let coin: ERC20
+  const createAccount = async (toCreateBankAccountName: string) => {
+    const tx = await bank.createNewBankAccount(toCreateBankAccountName)
+    const receipt = await tx.wait()
+    const event = receipt.events?.find(
+      (event) => event.event === 'BankAccountCreated',
+    )
+    const createdBankAccountName: string = event!.args?.[1]
+    expect(createdBankAccountName).to.be.equal(toCreateBankAccountName)
+  }
+  const createFirstAccount = async () => {
+    await createAccount('test1')
+  }
+  const createSecondAccount = async () => {
+    await createAccount('test2')
+  }
+  const createThirdAccount = async () => {
+    await createAccount('test3')
+  }
   this.beforeEach(async function () {
     coin = await deployCoin()
     bank = await deployBankContract(coin.address)
@@ -28,69 +46,27 @@ describe('Bank', function () {
   }
   describe('create account', async function () {
     it('can create a bank account with specified name', async function () {
-      const toCreateBankAccountName = 'test'
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-      const event = receipt.events?.find(
-        (event) => event.event === 'BankAccountCreated',
-      )
-      const createdBankAccountName = event!.args?.[1]
-      expect(createdBankAccountName).to.be.equal(toCreateBankAccountName)
+      await createAccount('test1')
     })
     it('can create bank accounts', async function () {
-      const createFirstAccount = async () => {
-        const toCreateBankAccountName = 'test1'
-        const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-        const receipt = await tx.wait()
-        const event = receipt.events?.find(
-          (event) => event.event === 'BankAccountCreated',
-        )
-        const createdBankAccountName: string = event!.args?.[1]
-        expect(createdBankAccountName).to.be.equal(toCreateBankAccountName)
-      }
-      const createSecondAccount = async () => {
-        const toCreateBankAccountName = 'test2'
-        const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-        const receipt = await tx.wait()
-        const event = receipt.events?.find(
-          (event) => event.event === 'BankAccountCreated',
-        )
-        const createdBankAccountName = event!.args?.[1]
-        expect(createdBankAccountName).to.be.equal(toCreateBankAccountName)
-      }
       await createFirstAccount()
       await createSecondAccount()
     })
     it('can not create a not unique bank account name', async function () {
       const name = 'test1'
-      const createAccountWithUniqueName = async () => {
-        const toCreateBankAccountName = name
-        const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-        const receipt = await tx.wait()
-      }
       const createAccountWithUnUniqueName = async () => {
         const toCreateBankAccountName = name
         await expect(
           bank.createNewBankAccount(toCreateBankAccountName),
         ).to.revertedWith('bank account name must be unique')
       }
-      await createAccountWithUniqueName()
+      await createAccount(name)
       await createAccountWithUnUniqueName()
     })
   })
 
   describe('list accounts', async function () {
     it('can list bank account names of address with balance', async function () {
-      const createFirstAccount = async () => {
-        const toCreateBankAccountName = 'test1'
-        const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-        const receipt = await tx.wait()
-      }
-      const createSecondAccount = async () => {
-        const toCreateBankAccountName = 'test2'
-        const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-        const receipt = await tx.wait()
-      }
       const getBankAccountsOfAddress = async () => {
         const [owner, otherAccount] = await ethers.getSigners()
         const createdFirstAccount = await bank.bankAccounts(owner.address, 0)
@@ -111,11 +87,6 @@ describe('Bank', function () {
   })
   it('can deposit erc20 by specifing valid account name, arbiraty amount', async function () {
     const depositAmount = 10
-    const createFirstAccount = async () => {
-      const toCreateBankAccountName = 'test1'
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
     const [owner, otherAccount] = await ethers.getSigners()
     await createFirstAccount()
     const balanceWalletBeforeDeposit = await coin.balanceOf(owner.address)
@@ -143,11 +114,6 @@ describe('Bank', function () {
   it('can withdraw erc20 by specifing valid account name, arbiraty amount', async function () {
     const withdrawAmount = 10
     const depositAmount = 10
-    const createFirstAccount = async () => {
-      const toCreateBankAccountName = 'test1'
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
     const [owner, otherAccount] = await ethers.getSigners()
     await createFirstAccount()
     await coin.approve(bank.address, ethers.constants.MaxUint256)
@@ -176,17 +142,6 @@ describe('Bank', function () {
   it('can transfer erc20 by specifing valid account name, arbiraty amount', async function () {
     const depositAmount = 10
     const transferAmount = 10
-    const [owner, otherAccount] = await ethers.getSigners()
-    const createFirstAccount = async () => {
-      const toCreateBankAccountName = 'test1'
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
-    const createSecondAccount = async () => {
-      const toCreateBankAccountName = 'test2'
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
     await createFirstAccount()
     await createSecondAccount()
     await coin.approve(bank.address, ethers.constants.MaxUint256)
@@ -215,19 +170,8 @@ describe('Bank', function () {
     const depositAmount = ethers.utils.parseEther('10')
     const transferAmount = ethers.utils.parseEther('10')
     const [owner, otherAccount] = await ethers.getSigners()
-    const createFirstAccount = async () => {
-      const toCreateBankAccountName = 'test1'
-      bank = Bank__factory.connect(bank.address, owner)
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
-    const createSecondAccount = async () => {
-      const toCreateBankAccountName = 'test2'
-      bank = Bank__factory.connect(bank.address, otherAccount)
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
     await createFirstAccount()
+    bank = Bank__factory.connect(bank.address, otherAccount)
     await createSecondAccount()
     await coin.approve(bank.address, ethers.constants.MaxUint256)
     bank = Bank__factory.connect(bank.address, owner)
@@ -256,22 +200,6 @@ describe('Bank', function () {
   it('transfer the ERC 20 token that is in the balance of my account to multiple accounts at the same time through the list of account names.', async function () {
     const depositAmount = ethers.utils.parseEther('10')
     const transferAmount = ethers.utils.parseEther('1')
-    const [owner, otherAccount] = await ethers.getSigners()
-    const createFirstAccount = async () => {
-      const toCreateBankAccountName = 'test1'
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
-    const createSecondAccount = async () => {
-      const toCreateBankAccountName = 'test2'
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
-    const createThirdAccount = async () => {
-      const toCreateBankAccountName = 'test3'
-      const tx = await bank.createNewBankAccount(toCreateBankAccountName)
-      const receipt = await tx.wait()
-    }
     await createFirstAccount()
     await createSecondAccount()
     await createThirdAccount()
