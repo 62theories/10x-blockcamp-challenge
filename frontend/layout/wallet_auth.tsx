@@ -1,4 +1,5 @@
 import * as ethers from 'ethers'
+import { useRouter } from 'next/router'
 import React from 'react'
 import { useEffect, useState } from 'react'
 import { walletStore } from '../store'
@@ -8,6 +9,7 @@ type PropsType = {
 
 export default function WalletAuth(props: PropsType) {
   const { children } = props
+  const router = useRouter()
   const setSigner = walletStore((state) => state.setSigner)
   const walletAddress = walletStore((state) => state.walletAddress)
   const connectWallet = async () => {
@@ -17,18 +19,49 @@ export default function WalletAuth(props: PropsType) {
     setSigner(signer)
   }
 
+  const formatAddress = (address: string) => {
+    return `${address.substring(0, 6)}...${address.substring(
+      address.length - 6,
+      address.length - 1,
+    )}`
+  }
+
   const renderWalletAddress = () => {
     if (walletAddress) {
-      return <div>{walletAddress}</div>
+      return (
+        <div className="bg-[rgb(42,204,163)] rounded px-2 py-1">
+          {formatAddress(walletAddress)}
+        </div>
+      )
     } else {
-      return <button onClick={connectWallet}>connect wallet</button>
+      return (
+        <button
+          className="bg-[rgb(42,204,163)] rounded px-2 py-1"
+          onClick={connectWallet}
+        >
+          connect wallet
+        </button>
+      )
     }
   }
 
   return (
     <>
-      <div>{renderWalletAddress()}</div>
-      {walletAddress ? <>{children}</> : <></>}
+      <div className="min-h-screen flex flex-col">
+        <div className="bg-[rgb(55,80,202)] px-5 py-3 flex text-white justify-between items-center overflow-hidden">
+          <p
+            onClick={() => {
+              router.push('/')
+            }}
+          >
+            10xBank
+          </p>
+          {renderWalletAddress()}
+        </div>
+        <div className="flex-1 bg-[rgb(239,240,245)]">
+          {walletAddress ? <>{children}</> : <></>}
+        </div>
+      </div>
     </>
   )
 }

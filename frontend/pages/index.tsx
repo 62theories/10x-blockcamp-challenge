@@ -59,32 +59,49 @@ export default function Home() {
       <div>
         {banksAccount.map(({ banksAccountName, balance }) => {
           return (
-            <div>
-              <p>Account Name: {banksAccountName}</p>
-              <p>
-                Balance: {balance} {coinSymbol}
-              </p>
-              <button
-                onClick={() => {
-                  router.push(`/deposit?bankAccountName=${banksAccountName}`)
-                }}
-              >
-                Deposit
-              </button>
-              <button
-                onClick={() => {
-                  router.push(`/withdraw?bankAccountName=${banksAccountName}`)
-                }}
-              >
-                Withdraw
-              </button>
-              <button
-                onClick={() => {
-                  router.push(`/transfer?bankAccountName=${banksAccountName}`)
-                }}
-              >
-                Transfer
-              </button>
+            <div className="bg-white p-3 mt-5">
+              <div className="flex">
+                <label htmlFor="" className="basis-1/2 md:basis-1/3">
+                  Account Name:
+                </label>
+                <label htmlFor="" className="flex-3">
+                  {banksAccountName}
+                </label>
+              </div>
+              <div className="flex mt-3">
+                <label htmlFor="" className="basis-1/2 md:basis-1/3">
+                  Balance:
+                </label>
+                <label htmlFor="" className="flex-3">
+                  {Number(balance).toLocaleString()} {coinSymbol}
+                </label>
+              </div>
+              <div className="space-y-3 mt-3 md:flex md:space-y-0 md:space-x-3">
+                <button
+                  className="bg-[rgb(49,200,154)] text-white p-1 rounded block w-full"
+                  onClick={() => {
+                    router.push(`/deposit?bankAccountName=${banksAccountName}`)
+                  }}
+                >
+                  Deposit
+                </button>
+                <button
+                  className="bg-[rgb(56,185,224)] text-white p-1 rounded block w-full"
+                  onClick={() => {
+                    router.push(`/withdraw?bankAccountName=${banksAccountName}`)
+                  }}
+                >
+                  Withdraw
+                </button>
+                <button
+                  className="bg-[rgb(55,80,202)] text-white p-1 rounded block w-full"
+                  onClick={() => {
+                    router.push(`/transfer?bankAccountName=${banksAccountName}`)
+                  }}
+                >
+                  Transfer
+                </button>
+              </div>
             </div>
           )
         })}
@@ -94,16 +111,55 @@ export default function Home() {
   return (
     <>
       <WalletAuth>
-        <p>My Accounts</p>
-        {renderBankAccount()}
-        <div>
-          <button
+        <div className="px-5 max-w-screen-md m-auto">
+          <div className="bg-white mt-5 p-3 rounded">
+            <p className="text-[rgb(55,80,202)] text-xl">My Accounts</p>
+            <hr className="mt-3" />
+            <div className="flex mt-3">
+              <div className="flex-1">
+                <p className="text-sm text-gray-700">Total accounts:</p>
+                <p className="text-[rgb(51,55,97)] text-sm font-bold">
+                  {banksAccount.length}
+                </p>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-700">Total balance:</p>
+                <p className="text-[rgb(51,55,97)]  text-sm  font-bold">
+                  {banksAccount
+                    .reduce((prev, cur) => {
+                      return prev + Number(cur.balance)
+                    }, 0)
+                    .toLocaleString()}{' '}
+                  {coinSymbol}
+                </p>
+              </div>
+            </div>
+          </div>
+          {renderBankAccount()}
+          <div
+            className="border-2 p-3 mt-5 border-dashed border-gray-500 rounded flex justify-center items-center h-[150px] cursor-pointer"
             onClick={() => {
               router.push('/create_account')
             }}
           >
-            create bank account
-          </button>
+            <div className="flex">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <p>create bank account</p>
+            </div>
+          </div>
         </div>
       </WalletAuth>
     </>
