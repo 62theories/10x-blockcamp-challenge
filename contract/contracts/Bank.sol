@@ -23,39 +23,59 @@ contract Bank is Context {
     uint256 public feePercent = 1;
     address public tokenAddress;
 
-    function createNewBankAccount(string memory bankAccountName) public {
+    modifier onlyUniqueBankAccountName(string memory bankAccountName) {
         require(
             bankAccountNameToAddress[bankAccountName] == address(0),
             "bank account name must be unique"
         );
+        _;
+    }
+
+    modifier onlyExistBankAccountName(string memory bankAccountName) {
+        require(
+            bankAccountNameToAddress[bankAccountName] != address(0),
+            "invalid bank account name"
+        );
+        _;
+    }
+
+    modifier onlyBankAccountOwner(string memory bankAccountName) {
+        require(
+            bankAccountNameToAddress[bankAccountName] == _msgSender(),
+            "invalid bank account owner"
+        );
+        _;
+    }
+
+    modifier onlyFeeCollector() {
+        require(_msgSender() == _feeCollector, "must be fee collector");
+        _;
+    }
+
+    function createNewBankAccount(string memory bankAccountName)
+        public
+        onlyUniqueBankAccountName(bankAccountName)
+    {
         bankAccountNameToAddress[bankAccountName] = _msgSender();
         bankAccounts[_msgSender()].push(bankAccountName);
         bankAccountsLength[_msgSender()] += 1;
         emit BankAccountCreated(_msgSender(), bankAccountName);
     }
 
-    function deposit(string memory bankAccountName, uint256 amount) public {
-        require(
-            bankAccountNameToAddress[bankAccountName] != address(0),
-            "invalid bank account name"
-        );
-        require(
-            bankAccountNameToAddress[bankAccountName] == _msgSender(),
-            "invalid bank account owner"
-        );
+    function deposit(string memory bankAccountName, uint256 amount)
+        public
+        onlyExistBankAccountName(bankAccountName)
+        onlyBankAccountOwner(bankAccountName)
+    {
         balanceOfBankAccountName[bankAccountName] += amount;
         IERC20(tokenAddress).transferFrom(_msgSender(), address(this), amount);
     }
 
-    function withdraw(string memory bankAccountName, uint256 amount) public {
-        require(
-            bankAccountNameToAddress[bankAccountName] != address(0),
-            "invalid bank account name"
-        );
-        require(
-            bankAccountNameToAddress[bankAccountName] == _msgSender(),
-            "invalid bank account owner"
-        );
+    function withdraw(string memory bankAccountName, uint256 amount)
+        public
+        onlyExistBankAccountName(bankAccountName)
+        onlyBankAccountOwner(bankAccountName)
+    {
         require(
             balanceOfBankAccountName[bankAccountName] - amount >= 0,
             "invalid amount"
@@ -68,19 +88,12 @@ contract Bank is Context {
         string memory from,
         string memory to,
         uint256 amount
-    ) public {
-        require(
-            bankAccountNameToAddress[from] != address(0),
-            "invalid bank account name"
-        );
-        require(
-            bankAccountNameToAddress[to] != address(0),
-            "invalid bank account name"
-        );
-        require(
-            bankAccountNameToAddress[from] == _msgSender(),
-            "invalid bank account owner"
-        );
+    )
+        public
+        onlyExistBankAccountName(from)
+        onlyExistBankAccountName(to)
+        onlyBankAccountOwner(from)
+    {
         require(balanceOfBankAccountName[from] - amount >= 0, "invalid amount");
         balanceOfBankAccountName[from] -= amount;
         if (bankAccountNameToAddress[from] != bankAccountNameToAddress[to]) {
@@ -103,8 +116,7 @@ contract Bank is Context {
         }
     }
 
-    function collectFee() public {
-        require(_msgSender() == _feeCollector, "must be fee collector");
+    function collectFee() public onlyFeeCollector {
         uint256 feeToCollect = feeBalance;
         feeBalance -= feeToCollect;
         IERC20(tokenAddress).transfer(_feeCollector, feeToCollect);
