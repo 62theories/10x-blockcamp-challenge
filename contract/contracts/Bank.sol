@@ -4,8 +4,6 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Bank is Context {
-    address tokenAddress;
-
     constructor(address _tokenAddress) {
         tokenAddress = _tokenAddress;
         _feeCollector = _msgSender();
@@ -17,11 +15,13 @@ contract Bank is Context {
     );
 
     mapping(address => string[]) public bankAccounts;
+    mapping(address => uint256) public bankAccountsLength;
     mapping(string => address) public bankAccountNameToAddress;
     mapping(string => uint256) public balanceOfBankAccountName;
     address private _feeCollector;
     uint256 public feeBalance;
     uint256 public feePercent = 1;
+    address public tokenAddress;
 
     function createNewBankAccount(string memory bankAccountName) public {
         require(
@@ -30,6 +30,7 @@ contract Bank is Context {
         );
         bankAccountNameToAddress[bankAccountName] = _msgSender();
         bankAccounts[_msgSender()].push(bankAccountName);
+        bankAccountsLength[_msgSender()] += 1;
         emit BankAccountCreated(_msgSender(), bankAccountName);
     }
 
