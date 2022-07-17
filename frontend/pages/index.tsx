@@ -18,9 +18,11 @@ export default function Home() {
   >([])
   const [coinSymbol, setCoinSymbol] = useState('')
   const signer = walletStore((state) => state.signer)
+  const [isLoading, setIsLoading] = useState(false)
   useEffect(() => {
     ;(async () => {
       try {
+        setIsLoading(true)
         if (signer) {
           const bank = Bank__factory.connect(BANK_CONTRACT_ADDRESS, signer)
           const bankAccountsLength = (
@@ -48,6 +50,8 @@ export default function Home() {
         }
       } catch (err) {
         console.error(err)
+      } finally {
+        setIsLoading(false)
       }
     })()
   }, [signer])
@@ -111,56 +115,62 @@ export default function Home() {
   return (
     <>
       <WalletAuth>
-        <div className="px-5 max-w-screen-md m-auto">
-          <div className="bg-white mt-5 p-3 rounded">
-            <p className="text-[rgb(55,80,202)] text-xl">My Accounts</p>
-            <hr className="mt-3" />
-            <div className="flex mt-3">
-              <div className="flex-1">
-                <p className="text-sm text-gray-700">Total accounts:</p>
-                <p className="text-[rgb(51,55,97)] text-sm font-bold">
-                  {banksAccount.length}
-                </p>
+        {isLoading ? (
+          <div></div>
+        ) : (
+          <>
+            <div className="px-5 max-w-screen-md m-auto">
+              <div className="bg-white mt-5 p-3 rounded">
+                <p className="text-[rgb(55,80,202)] text-xl">My Accounts</p>
+                <hr className="mt-3" />
+                <div className="flex mt-3">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">Total accounts:</p>
+                    <p className="text-[rgb(51,55,97)] text-sm font-bold">
+                      {banksAccount.length}
+                    </p>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">Total balance:</p>
+                    <p className="text-[rgb(51,55,97)]  text-sm  font-bold">
+                      {banksAccount
+                        .reduce((prev, cur) => {
+                          return prev + Number(cur.balance)
+                        }, 0)
+                        .toLocaleString()}{' '}
+                      {coinSymbol}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-700">Total balance:</p>
-                <p className="text-[rgb(51,55,97)]  text-sm  font-bold">
-                  {banksAccount
-                    .reduce((prev, cur) => {
-                      return prev + Number(cur.balance)
-                    }, 0)
-                    .toLocaleString()}{' '}
-                  {coinSymbol}
-                </p>
-              </div>
-            </div>
-          </div>
-          {renderBankAccount()}
-          <div
-            className="border-2 p-3 mt-5 border-dashed border-gray-500 rounded flex justify-center items-center h-[150px] cursor-pointer"
-            onClick={() => {
-              router.push('/create_account')
-            }}
-          >
-            <div className="flex">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+              {renderBankAccount()}
+              <div
+                className="border-2 p-3 mt-5 border-dashed border-gray-500 rounded flex justify-center items-center h-[150px] cursor-pointer"
+                onClick={() => {
+                  router.push('/create_account')
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              <p>create bank account</p>
+                <div className="flex">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  <p>create bank account</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </WalletAuth>
     </>
   )
