@@ -1,7 +1,7 @@
 {
   "bsc_test": {
-    "coin": "0x24F5f0AAC31cFe8a2Ec0022CD6C86A9d8F8e6CD6",
-    "bank": "0x567F013e7366260AC0d863287534309066279362"
+    "coin": "0xFBe46dBe8eeA1115f8aB371861C8727370bc345A",
+    "bank": "0x22096a1a16b8dF5e62b55fEfd14a6A612B8a53e1"
   },
   "hardhat": {
     "coin": "0x9E1a6510D4bc1af68C86Ef168DfA16c98e2c1FB5",
